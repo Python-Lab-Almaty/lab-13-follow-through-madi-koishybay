@@ -10,6 +10,7 @@ import numpy as np
 # 🟢 КОНСТАНТЫ
 # ----------------------------
 WIDTH, HEIGHT = 1400, 900
+LEADERBOARD_FILE = "leaderboard.json"
 
 # 🟢 ИНИЦИАЛИЗАЦИЯ ЛОГА
 log = []
@@ -121,6 +122,65 @@ def save_log(reason="end"):
         print(f"💾 Лог сохранён: {filename} ({len(log)} записей)")
     except Exception as e:
         print(f"❌ Ошибка сохранения лога: {e}")
+
+
+def load_leaderboard():
+    if not os.path.exists(LEADERBOARD_FILE):
+        return []
+
+    try:
+        with open(LEADERBOARD_FILE, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            if isinstance(data, list):
+                return data
+    except Exception:
+        pass
+    return []
+
+
+def save_leaderboard(entries):
+    try:
+        with open(LEADERBOARD_FILE, 'w', encoding='utf-8') as f:
+            json.dump(entries, f, indent=2, ensure_ascii=False)
+    except Exception:
+        pass
+
+
+def update_leaderboard(name, score, elapsed_time):
+    entries = load_leaderboard()
+    new_entry = {
+        'name': name,
+        'score': score,
+        'time': round(elapsed_time, 2),
+        'date': time.strftime("%Y-%m-%d %H:%M:%S")
+    }
+    entries.append(new_entry)
+    entries.sort(key=lambda item: (-item['score'], item['time'], item['date']))
+    top_entries = entries[:3]
+    save_leaderboard(top_entries)
+    return top_entries
+
+
+def draw_leaderboard(entries):
+    if not hasattr(draw_leaderboard, 'drawer'):
+        draw_leaderboard.drawer = turtle.Turtle()
+        draw_leaderboard.drawer.hideturtle()
+        draw_leaderboard.drawer.penup()
+        draw_leaderboard.drawer.speed(0)
+
+    board = draw_leaderboard.drawer
+    board.clear()
+    board.goto(WIDTH//2 - 320, HEIGHT//2 - 90)
+    board.write("🏆 TOP-3 Leaderboard", align="right", font=("Arial", 14, "bold"))
+    offset = 30
+    if not entries:
+        board.goto(WIDTH//2 - 320, HEIGHT//2 - 90 - offset)
+        board.write("Нет результатов", align="right", font=("Arial", 12, "normal"))
+        return
+
+    for index, entry in enumerate(entries, start=1):
+        board.goto(WIDTH//2 - 320, HEIGHT//2 - 90 - offset * index)
+        board.write(f"{index}. {entry['name']} — {entry['score']} pts, {entry['time']:.2f}s", align="right", font=("Arial", 12, "normal"))
 
 # ----------------------------
 # 🟢 ИНИЦИАЛИЗАЦИЯ ИГРЫ
@@ -472,6 +532,12 @@ while True:
                 'date': time.strftime("%Y-%m-%d %H:%M:%S")
             }, f, indent=2)
         
+        leaderboard_entries = update_leaderboard(student_name, final_score, total_time)
+        print("\nТОП-3 РЕКОРДА:")
+        for idx, entry in enumerate(leaderboard_entries, start=1):
+            print(f"{idx}. {entry['name']} — {entry['score']} pts, {entry['time']:.2f}s, {entry['date']}")
+
+        draw_leaderboard(leaderboard_entries)
         save_log("mission_complete")  # ✅ ОДИН РАЗ В КОНЦЕ!
         break
     # Столкновение

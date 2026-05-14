@@ -325,55 +325,51 @@ def check_collision():
 # ----------------------------
 def up():
     global steps
-    hero.sety(hero.ycor() + vy)
+    hero.forward(vy)
     steps += 1
     
     log.append({
         "event": "move",
-        "direction": "up",
+        "direction": "forward",
         "x": hero.xcor(),
         "y": hero.ycor(),
         "time": time.time()
     })
+
 
 def down():
     global steps
-    hero.sety(hero.ycor() - vy)
+    hero.backward(vy)
     steps += 1
     
     log.append({
         "event": "move",
-        "direction": "down",
+        "direction": "backward",
         "x": hero.xcor(),
         "y": hero.ycor(),
         "time": time.time()
     })
 
-def left():
-    global steps
-    hero.setx(hero.xcor() - vx)
-    steps += 1
-    
+
+def turn_left():
+    hero.left(15)
     log.append({
-        "event": "move",
+        "event": "turn",
         "direction": "left",
-        "x": hero.xcor(),
-        "y": hero.ycor(),
+        "heading": hero.heading(),
         "time": time.time()
     })
 
-def right():
-    global steps
-    hero.setx(hero.xcor() + vx)
-    steps += 1
-    
+
+def turn_right():
+    hero.right(15)
     log.append({
-        "event": "move",
+        "event": "turn",
         "direction": "right",
-        "x": hero.xcor(),
-        "y": hero.ycor(),
+        "heading": hero.heading(),
         "time": time.time()
     })
+
 
 def reset_session():
     clear_session(student_name)
@@ -382,12 +378,12 @@ def reset_session():
 screen.listen()
 screen.onkey(up, "Up")
 screen.onkey(down, "Down")
-screen.onkey(left, "Left")
-screen.onkey(right, "Right")
+screen.onkey(turn_left, "Left")
+screen.onkey(turn_right, "Right")
 screen.onkey(up, "w")
 screen.onkey(down, "s")
-screen.onkey(left, "a")
-screen.onkey(right, "d")
+screen.onkey(turn_left, "a")
+screen.onkey(turn_right, "d")
 screen.onkey(reset_session, "r")
 
 # ----------------------------
@@ -413,7 +409,7 @@ print(f"📍 Start: {start}")
 print(f"🎯 Goal: {goal}")
 print(f"⚠️ Препятствий: {len(impassable_obstacles)}")
 print(f"\n🎯 Цель: A → B → A")
-print(f"⌨️ Управление: стрелки или WASD")
+print(f"⌨️ Управление: стрелки вверх/вниз или W/S — движение, A/D или ←/→ — поворот")
 print(f"🔄 Сброс: R")
 print(f"\n🔴 КРАСНЫЕ = штраф -10")
 print(f"🟢 ЗЕЛЁНЫЕ = GAME OVER (появляются на обратном пути)")
@@ -478,7 +474,6 @@ while True:
         
         save_log("mission_complete")  # ✅ ОДИН РАЗ В КОНЦЕ!
         break
-    
     # Столкновение
     collision = check_collision()
     if collision == "game_over":

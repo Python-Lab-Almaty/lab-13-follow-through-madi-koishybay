@@ -4,7 +4,8 @@ import time
 import hashlib
 import os
 import json
-
+import pygame
+import numpy as np 
 # ----------------------------
 # 🟢 КОНСТАНТЫ
 # ----------------------------
@@ -135,6 +136,18 @@ screen.setup(WIDTH, HEIGHT)
 screen.title(f"Red Riding Hood Mission - {student_name}")
 screen.bgcolor("white")
 screen.tracer(0)
+
+try:
+    pygame.mixer.init()
+    sample_rate = 44100
+    duration = 0.5
+    frequency = 800
+    t = np.linspace(0, duration, int(sample_rate * duration), False)
+    wave = np.sin(frequency * 2 * np.pi * t) * 32767
+    wave = wave.astype(np.int16)
+    beep_sound = pygame.sndarray.make_sound(np.column_stack((wave, wave)))
+except pygame.error:
+    beep_sound = None
 
 # ----------------------------
 # 🟢 ГЕРОЙ
@@ -425,6 +438,8 @@ while True:
     if going_forward and abs(hero.xcor() - goal[0]) < 40 and abs(hero.ycor() - goal[1]) < 40:
         print("🎯 Reached B! RETURN TO A!")
         print(f"🟢 Теперь будут появляться препятствия!")
+        if beep_sound:
+            beep_sound.play()
         going_forward = False
         
         log.append({
